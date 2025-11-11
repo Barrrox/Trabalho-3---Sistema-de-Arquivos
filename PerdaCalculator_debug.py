@@ -32,7 +32,7 @@ def Perda(ArmazenamentoTotalGB, BitsFAT, BytesPorSetor, SetorPorCluster):
     # --- Cálculo do Tamanho da FAT ---
 
     # O tamanho de uma única tabela FAT em bytes (2^BitsFAT entradas, cada uma com BitsFAT/8 bytes)
-    TamanhoFAT_Bytes = (2**BitsFAT) * math.ceil(BitsFAT / 8)
+    TamanhoFAT_Bytes = math.ceil((2**BitsFAT) * (BitsFAT / 8))
     # =CEILING((2^BitsFAT * BitsFAT/8))
     print("TamanhoFAT_Bytes:", TamanhoFAT_Bytes)
 
@@ -67,7 +67,7 @@ def Perda(ArmazenamentoTotalGB, BitsFAT, BytesPorSetor, SetorPorCluster):
     print("EnderecosNaoUtilizadosFAT:", EnderecosNaoUtilizadosFAT)
 
     # Tamanho do endereço na FAT em bytes
-    TamanhoEnderecoFAT = math.ceil(BitsFAT / 8)
+    TamanhoEnderecoFAT = BitsFAT / 8
     print("TamanhoEnderecoFAT:", TamanhoEnderecoFAT)
 
     # Perda em bytes na Tabela FAT devido a endereços sem clusters correspondentes.
@@ -110,7 +110,7 @@ def main():
     # BytesPorSetor_possiveis = [512]
     
     # Testa todas as possibilidades entre 1 até 16 setores por cluster
-    SetorPorCluster_possiveis = [8]
+    SetorPorCluster_possiveis = [16]
 
     
     

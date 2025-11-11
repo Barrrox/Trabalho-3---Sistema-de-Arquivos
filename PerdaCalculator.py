@@ -32,7 +32,7 @@ def Perda(ArmazenamentoTotalGB, BitsFAT, BytesPorSetor, SetorPorCluster):
     # --- Cálculo do Tamanho da FAT ---
 
     # O tamanho de uma única tabela FAT em bytes (2^BitsFAT entradas, cada uma com BitsFAT/8 bytes)
-    TamanhoFAT_Bytes = (2**BitsFAT) * math.ceil(BitsFAT / 8)
+    TamanhoFAT_Bytes = math.ceil((2**BitsFAT) * (BitsFAT / 8))
 
     # O sistema FAT usa duas cópias da tabela FAT (por redundância). O tamanho total em setores.
     # math.ceil é usado pois o espaço da FAT deve ocupar um número inteiro de setores,
@@ -60,8 +60,7 @@ def Perda(ArmazenamentoTotalGB, BitsFAT, BytesPorSetor, SetorPorCluster):
     EnderecosNaoUtilizadosFAT = NumClusterEnderecaveis - NumClustersPossiveis
 
     # Tamanho do endereço na FAT em bytes
-    TamanhoEnderecoFAT = math.ceil(BitsFAT / 8)
-
+    TamanhoEnderecoFAT = BitsFAT / 8
     # Perda em bytes na Tabela FAT devido a endereços sem clusters correspondentes.
     # Se EnderecosNaoUtilizadosFAT for negativo, significa que a perda é 0 (a FAT é menor que a área de dados).
     BytesNaoUtilizadosFAT = max(0, EnderecosNaoUtilizadosFAT * TamanhoEnderecoFAT)
@@ -89,8 +88,8 @@ def main():
     ArmazenamentoTotalGB = 64
 
     # Testa todas as possibilidades para quantidade de bits da FAT entre 1 e 64
-    # BitsFAT_possiveis = [i for i in range(1,65)]
-    BitsFAT_possiveis = [23]
+    BitsFAT_possiveis = [i for i in range(1,65)]
+    # BitsFAT_possiveis = [24]
 
     # Testa todas as possibilidades entre 128 (2^7) até 8192 (2^13) bytes por setor
     BytesPorSetor_possiveis = [2**i for i in range(7,13)]
