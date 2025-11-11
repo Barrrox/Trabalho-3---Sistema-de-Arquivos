@@ -33,11 +33,14 @@ def Perda(ArmazenamentoTotalGB, BitsFAT, BytesPorSetor, SetorPorCluster):
 
     # O tamanho de uma única tabela FAT em bytes (2^BitsFAT entradas, cada uma com BitsFAT/8 bytes)
     TamanhoFAT_Bytes = (2**BitsFAT) * math.ceil(BitsFAT / 8)
+    # =CEILING((2^BitsFAT * BitsFAT/8))
+    print("TamanhoFAT_Bytes:", TamanhoFAT_Bytes)
 
     # O sistema FAT usa duas cópias da tabela FAT (por redundância). O tamanho total em setores.
     # math.ceil é usado pois o espaço da FAT deve ocupar um número inteiro de setores,
     # arredondando para cima.
     SetoresFAT = math.ceil(TamanhoFAT_Bytes / BytesPorSetor)
+    print("SetoresFAT:", SetoresFAT)
 
     # --- Cálculo do Tamanho da Área de Dados ---
 
@@ -47,35 +50,45 @@ def Perda(ArmazenamentoTotalGB, BitsFAT, BytesPorSetor, SetorPorCluster):
     # Número de setores que sobraram para a área de dados após subtrair as áreas reservadas.
     # math.floor é usado para garantir um número inteiro de setores na área de dados, truncando.
     SetoresDados = math.floor(TotalSetores - (SetoresBootRecord + SetoresRootDir + 2 * SetoresFAT))
+    print("SetoresDados:", SetoresDados)
     
     # --- Perda 1: Espaço Não Utilizado na Tabela FAT ---
 
     # Número de clusters que a FAT pode endereçar (entradas possíveis)
     NumClusterEnderecaveis = 2**BitsFAT
+    print("NumClusterEnderecaveis:", NumClusterEnderecaveis)
 
     # Número de clusters fisicamente possíveis na área de dados
     NumClustersPossiveis = math.floor(SetoresDados / SetorPorCluster)
+    print("NumClustersPossiveis:", NumClustersPossiveis)
 
     # Endereços na FAT que não corresponderão a um cluster real (ocorre se NumClusterEnderecaveis > NumClustersPossiveis)
     EnderecosNaoUtilizadosFAT = NumClusterEnderecaveis - NumClustersPossiveis
+    print("EnderecosNaoUtilizadosFAT:", EnderecosNaoUtilizadosFAT)
 
     # Tamanho do endereço na FAT em bytes
     TamanhoEnderecoFAT = math.ceil(BitsFAT / 8)
+    print("TamanhoEnderecoFAT:", TamanhoEnderecoFAT)
 
     # Perda em bytes na Tabela FAT devido a endereços sem clusters correspondentes.
-    # Se EnderecosNaoUtilizadosFAT for negativo, significa que a perda é 0 (a FAT é menor que a área de dados).
-    BytesNaoUtilizadosFAT = max(0, EnderecosNaoUtilizadosFAT * TamanhoEnderecoFAT)
+    # Se EnderecosNaoUtilizadosFAT for negativo, significa que a perda é 0.
+    BytesNaoUtilizadosFAT = EnderecosNaoUtilizadosFAT * TamanhoEnderecoFAT
+    print("BytesNaoUtilizadosFAT:", BytesNaoUtilizadosFAT)
 
     # --- Perda 2: Espaço Vazio no Final da Área de Dados ---
+    print("\n\nEspaço Vazio no Final da Área de dados\n")
 
     # Clusters físicos que não são endereçáveis pela FAT (ocorre se NumClustersPossiveis > NumClusterEnderecaveis)
     NumClusterNaoUtilizadosDados = NumClustersPossiveis - NumClusterEnderecaveis
-
-    # Se a diferença for negativa, a perda é 0 (todos os clusters possíveis são endereçáveis).
-    NumClusterNaoUtilizadosDados = max(0, NumClusterNaoUtilizadosDados)
+    print("NumClusterNaoUtilizadosDados:", NumClusterNaoUtilizadosDados)
 
     # Perda em bytes na Área de Dados devido a clusters não endereçados.
     EspacoVazioDados = NumClusterNaoUtilizadosDados * SetorPorCluster * BytesPorSetor
+    print("EspacoVazioDados:", EspacoVazioDados)
+
+    # Aplica o máximo de 0 para garantir que a perda não seja negativa
+    BytesNaoUtilizadosFAT = max(0, BytesNaoUtilizadosFAT)
+    EspacoVazioDados = max(0, EspacoVazioDados)
 
     # Perda total em bytes
     Perda = BytesNaoUtilizadosFAT + EspacoVazioDados
@@ -93,11 +106,11 @@ def main():
     BitsFAT_possiveis = [23]
 
     # Testa todas as possibilidades entre 128 (2^7) até 8192 (2^13) bytes por setor
-    BytesPorSetor_possiveis = [2**i for i in range(7,13)]
+    BytesPorSetor_possiveis = [512]
     # BytesPorSetor_possiveis = [512]
     
     # Testa todas as possibilidades entre 1 até 16 setores por cluster
-    SetorPorCluster_possiveis = [i for i in range(1,17)]
+    SetorPorCluster_possiveis = [8]
 
     
     
@@ -108,18 +121,22 @@ def main():
         for BytesPorSetor in BytesPorSetor_possiveis:
             for SetorPorCluster in SetorPorCluster_possiveis:
                 
+                # O print das variáveis da função Perda será executado a cada iteração aqui
                 perda_atual = Perda(ArmazenamentoTotalGB, BitsFAT, BytesPorSetor, SetorPorCluster)
 
                 if perda_atual < menor_perda:
                     menor_perda = perda_atual
                     parametros_menor_perda = [ArmazenamentoTotalGB, BitsFAT, BytesPorSetor, SetorPorCluster]
 
-    
+    print("\n" + "="*50)
+    print("RESULTADO FINAL")
+    print("="*50)
     print(f"A menor perda para um armazenamento total de {parametros_menor_perda[0]} GB foi de {menor_perda} bytes\n")
-    print("Parâmetros:")
+    print("Parâmetros do Melhor Cenário:")
     print(f"  bits para FAT: {parametros_menor_perda[1]}")
     print(f"  Bytes por setor: {parametros_menor_perda[2]}")
     print(f"  Setores por cluster: {parametros_menor_perda[3]}")
-
+    print(f"  Bytes por cluster: {parametros_menor_perda[2]*parametros_menor_perda[3]} bytes")
+    
 if __name__ == "__main__":
     main()
